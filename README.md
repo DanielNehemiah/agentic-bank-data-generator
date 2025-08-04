@@ -10,3 +10,4 @@ A LangGraph agent to create synthetic data for a fictional bank. The data mimics
     - test correctness
     - use an llm instead of Faker
     - create a watchlist
+
