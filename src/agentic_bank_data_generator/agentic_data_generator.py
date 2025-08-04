@@ -153,6 +153,9 @@ def generate_transactions_node(state: AgentState):
         if is_suspicious:
             state['is_flagged'] = True
             db_execute("UPDATE KYC SET IsFlagged = TRUE WHERE CustomerID = ?", (customer_id,))
+        else:
+            state['is_flagged'] = False
+            db_execute("UPDATE KYC SET IsFlagged = FALSE WHERE CustomerID = ?", (customer_id,))
 
     state['transaction_count'] = state.get('transaction_count', 0) + num_transactions
     state['run_history'].append(f"Generated {num_transactions} transactions")
@@ -201,7 +204,7 @@ def should_continue(state: AgentState):
     if state['is_flagged']:
         return "flag_customer"
     # Simulate for roughly 5 years of activity
-    if state.get('transaction_count', 0) > 240: # Avg 4 transactions/month for 5 years
+    if state.get('transaction_count', 0) > random.randint(200, 280): # Avg 4 transactions/month for 5 years is 240
         return "end"
     return "continue_simulation"
 
@@ -253,7 +256,7 @@ def run_simulation(num_customers=100):
     for i in range(num_customers):
         print(f"\n--- Generating data for customer {i+1}/{num_customers} ---")
         initial_state = {"run_history": []}
-        app.invoke(initial_state)
+        app.invoke(initial_state, {"recursion_limit": 300})
     
     print(f"\n✅ Simulation complete. {num_customers} customer profiles generated in '{DB_NAME}'.")
 
@@ -262,20 +265,20 @@ import argparse
 
 
 if __name__ == "__main__":
-    # # Generate data for 500 customers
-    run_simulation(num_customers=10)
+    # # # Generate data for 500 customers
+    # run_simulation(num_customers=10)
     
-    # # Initialize parser
-    # parser = argparse.ArgumentParser()
+    # Initialize parser
+    parser = argparse.ArgumentParser()
 
-    # # Adding optional argument
-    # parser.add_argument("-c", "--customers", help = "Number of customers to be generated")
+    # Adding optional argument
+    parser.add_argument("-c", "--customers", help = "Number of customers to be generated")
 
-    # # Read arguments from command line
-    # args = parser.parse_args()
+    # Read arguments from command line
+    args = parser.parse_args()
 
-    # if args.customers:
-    #     print("Generating for % s customers" % args.customers)
-    #     run_simulation(num_customers=int(args.customers))
-    # else:
-    #     run_simulation(num_customers=500)
+    if args.customers:
+        print("Generating data for a bank with % s customers" % args.customers)
+        run_simulation(num_customers=int(args.customers))
+    else:
+        run_simulation(num_customers=10)
